@@ -153,13 +153,31 @@ class TestQueueProcessor(TestCase):
         self.qp.maildir.files.append(self.filename)
         self.qp.send_messages()
 
-        # File must remail were it was, so it will be retried
+        # File must remain were it was, so it will be retried
         self.assertTrue(os.path.exists(self.filename))
         self.assertEqual(self.qp.log.errors,
                           [('Error while sending mail from %s to %s.',
                             ('foo@example.com',
                              'bar@example.com, baz@example.com'),
                             {'exc_info': 1})])
+
+    def test_smtp_response_error_transient_ignore_exc(self):
+        # Test a transient error but ignore exception
+        self.qp.ignore_transient = True
+        self.qp.mailer = SMTPResponseExceptionMailerStub(451)
+        self.filename = os.path.join(self.dir, 'message')
+        temp = open(self.filename, "w+b")
+        temp.write(b('X-Actually-From: foo@example.com\n')+
+                   b('X-Actually-To: bar@example.com, baz@example.com\n')+
+                   b('Header: value\n\nBody\n'))
+        temp.close()
+        self.qp.maildir.files.append(self.filename)
+        self.qp.send_messages()
+
+        # File must remain were it was, so it will be retried
+        self.assertTrue(os.path.exists(self.filename))
+        # Transient errors ignored, so log should be empty
+        self.assertEqual(self.qp.log.errors, [])
 
     def test_smtp_response_error_permanent(self):
         # Test a permanent error
@@ -233,9 +251,9 @@ class TestQueueProcessor(TestCase):
 
         sent_message = self.qp.mailer.sent_messages[0]
         self.assertEqual(sent_message[0], 'foo@example.com')
-        self.assertEqual(sent_message[1], 
+        self.assertEqual(sent_message[1],
                           ('bar@example.com', 'baz@example.com'))
-        self.assertEqual(sent_message[2].as_string(), 
+        self.assertEqual(sent_message[2].as_string(),
                           'Header: value\n\nBody\n')
         self.assertFalse(os.path.exists(self.filename),
                          'File still exists')
@@ -471,7 +489,7 @@ class _Monkey(object):
         self.module = module
         self.orig = {}
         self.replacements = replacements
-        
+
     def __enter__(self):
         for k, v in self.replacements.items():
             orig = getattr(self.module, k, self)
