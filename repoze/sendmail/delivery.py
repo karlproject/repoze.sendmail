@@ -115,7 +115,9 @@ class MailDataManager(object):
             raise ValueError("Not in a transaction")
         if self.transaction is not trans:
             raise ValueError("In a different transaction")
-        # for now, we ignore the possibilty that TPC is underway
+        if self.tpc_phase != 0:
+            # for now, we bail out if TPC is underway (abort the abort!)
+            return
         if self.onAbort:
             self.onAbort()
 
