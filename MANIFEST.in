@@ -1,1 +1,4 @@
 include *.txt
+include MANIFEST.in
+include CHANGES.rst
+include README.rst
