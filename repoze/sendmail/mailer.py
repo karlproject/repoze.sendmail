@@ -14,6 +14,7 @@
 from email.message import Message
 import subprocess
 from smtplib import SMTP
+from smtplib import SMTPServerDisconnected
 
 try:
     import ssl
@@ -97,7 +98,12 @@ class SMTPMailer(object):
                     'Mailhost does not support ESMTP but a username '
                     'is configured')
 
-        connection.sendmail(fromaddr, toaddrs, message)
+        try:
+            connection.sendmail(fromaddr, toaddrs, message)
+        except SMTPServerDisconnected:
+            # We don't want to raise here, but there is no logging
+            pass
+        
         try:
             connection.quit()
         except SSLError:
