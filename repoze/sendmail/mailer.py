@@ -18,7 +18,7 @@ from smtplib import SMTPServerDisconnected
 
 try:
     import ssl
-except ImportError:  # pragma NO COVfrom smtplib import SMTPServerDisconnectedER
+except ImportError:  # pragma NO COVER
     HAVE_SSL = False
     SMTP_SSL = None
 else:  # pragma NO COVER
