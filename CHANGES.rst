@@ -1,8 +1,18 @@
 Change history
 ~~~~~~~~~~~~~~
 
-Unreleased
-----------
+4.2.6
+-----
+
+- Small fix to the logging errors change
+
+4.2.5
+-----
+
+- Stop logging errors on SMTPDisconnect
+
+4.2.4
+-----
 
 - Add support for Python 3.4, PyPy3.
 
