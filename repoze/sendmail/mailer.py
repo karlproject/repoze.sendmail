@@ -102,7 +102,8 @@ class SMTPMailer(object):
             connection.sendmail(fromaddr, toaddrs, message)
         except SMTPServerDisconnected:
             # We don't want to raise here, but there is no logging
-            pass
+            # already disconnected, so just return from here
+            return
         
         try:
             connection.quit()
