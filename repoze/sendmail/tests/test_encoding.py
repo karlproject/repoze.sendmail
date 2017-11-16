@@ -278,3 +278,38 @@ class TestEncoding(unittest.TestCase):
         self.assertEqual(
             encoded.count(quopri.encodestring(plain_string.encode('latin_1'))),
             2)
+
+    def test_encoding_multipart_with_windows_cp1250_chars(self):
+        from email.mime import application
+        from email.mime import multipart
+        from email.mime import nonmultipart
+        from repoze.sendmail._compat import b
+        from repoze.sendmail._compat import encodestring
+        from repoze.sendmail._compat import from_octets
+
+        message = multipart.MIMEMultipart('alternative')
+
+        utf_8_encoded = b('mo \xe2\x82\xac')
+        utf_8 = utf_8_encoded.decode('utf-8')
+
+        plain_string = 'Damn you, Windows \xc2\x97.'
+        plain_string_ascii = 'Damn you, Windows &#151;.'
+        plain_part = nonmultipart.MIMENonMultipart('plain', 'plain')
+        plain_part.set_payload(plain_string)
+        message.attach(plain_part)
+
+        html_string = '<p>' + utf_8 + '</p>'
+        html_part = nonmultipart.MIMENonMultipart('text', 'html')
+        html_part.set_payload(html_string)
+        message.attach(html_part)
+
+        binary = from_octets([x for x in range(256)])
+        binary_b64 = encodestring(binary)
+        binary_part = application.MIMEApplication(binary)
+        message.attach(binary_part)
+
+        encoded = self._callFUT(message)
+
+        self.assertTrue(plain_string_ascii in encoded)
+        self.assertTrue(encodestring(html_string.encode('utf-8')) in encoded)
+        self.assertTrue(binary_b64 in encoded)

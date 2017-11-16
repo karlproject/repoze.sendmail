@@ -100,7 +100,15 @@ def encode_message(message,
     The return is a byte string of the whole message.
     """
     cleanup_message(message)
-    return message.as_string().encode('ascii')
+    try:
+        encoded = message.as_string().encode('ascii')
+    except UnicodeDecodeError:
+        # Some weird character got here, probably from windows encodings.
+        # Encoding as ascii as above causes an implicit decoding as ascii,
+        # which raises an exception. To avoid, we decode manually first.
+        encoded = message.as_string().decode('utf-8')
+        encoded = encoded.encode('ascii', 'xmlcharrefreplace')
+    return encoded
 
 
 def best_charset(text):
