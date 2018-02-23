@@ -106,7 +106,10 @@ def encode_message(message,
         # Some weird character got here, probably from windows encodings.
         # Encoding as ascii as above causes an implicit decoding as ascii,
         # which raises an exception. To avoid, we decode manually first.
-        encoded = message.as_string().decode('utf-8')
+        try:
+            encoded = message.as_string().decode('utf-8')
+        except UnicodeDecodeError:
+            encoded = message.as_string().decode('iso-8859-1')
         encoded = encoded.encode('ascii', 'xmlcharrefreplace')
     return encoded
 
