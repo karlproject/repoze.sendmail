@@ -233,10 +233,26 @@ class QueueProcessor(object):
             except smtplib.SMTPResponseException as e:
                 if 500 <= e.smtp_code <= 599:
                     # permanent error, ditch the message
-                    self.log.error(
-                        "Discarding email from %s to %s due to"
-                        " a permanent error: %s",
-                        fromaddr, ", ".join(toaddrs), e.args)
+                    bounce = False
+                    args = e.args
+                    if args is None:
+                        args = []
+                    for arg in args:
+                        if isinstance(arg, int):
+                            continue
+                        if 'undeliverable address' in arg:
+                            bounce = True
+                    # only log to info if undeliverable address
+                    if bounce:
+                        self.log.info(
+                            "Discarding email from %s to %s due to"
+                            " a permanent error: %s",
+                            fromaddr, ", ".join(toaddrs), e.args)
+                    else:
+                        self.log.error(
+                            "Discarding email from %s to %s due to"
+                            " a permanent error: %s",
+                            fromaddr, ", ".join(toaddrs), e.args)
                     _os_link(filename, rejected_filename)
                 else:
                     # Log an error and retry later
