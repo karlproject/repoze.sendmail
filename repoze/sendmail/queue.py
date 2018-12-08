@@ -244,7 +244,7 @@ class QueueProcessor(object):
                             bounce = True
                     # only log to info if undeliverable address
                     if bounce:
-                        self.log.info(
+                        self.log.warn(
                             "Discarding email from %s to %s due to"
                             " a permanent error: %s",
                             fromaddr, ", ".join(toaddrs), e.args)
